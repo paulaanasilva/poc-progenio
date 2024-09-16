@@ -5,26 +5,25 @@ import { Post, User } from "./models";
 import { connectToDb } from "./utils";
 import { signIn, signOut } from "./auth";
 import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client";
 
-export const addPost = async (prevState,formData) => {
-  // const title = formData.get("title");
-  // const desc = formData.get("desc");
-  // const slug = formData.get("slug");
+const prisma = new PrismaClient();
 
-  const { title, desc, slug, userId } = Object.fromEntries(formData);
+export const updateCurso = async (formData) => {
+  const { id, nome, descricao } = Object.fromEntries(formData);
 
   try {
-    connectToDb();
-    const newPost = new Post({
-      title,
-      desc,
-      slug,
-      userId,
-    });
+    const updatedCurso = await prisma.curso.update(
+      {
+        where: { id: id },
+        data: {
+          nome,
+          descricao,
+        },
+      });
 
-    await newPost.save();
-    console.log("saved to db");
-    revalidatePath("/blog");
+    console.log("updated curso in db");
+    revalidatePath("/cursos");
     revalidatePath("/admin");
   } catch (err) {
     console.log(err);
@@ -32,117 +31,173 @@ export const addPost = async (prevState,formData) => {
   }
 };
 
-export const deletePost = async (formData) => {
-  const { id } = Object.fromEntries(formData);
+  export const addCurso = async (formData) => {
+    const { nome, descricao } = Object.fromEntries(formData);
 
-  try {
-    connectToDb();
+    try {
+      const newCurso = await prisma.curso.create(
+        {
+          data: {
+            nome,
+            descricao
+          }
+        }
+      )
 
-    await Post.findByIdAndDelete(id);
-    console.log("deleted from db");
-    revalidatePath("/blog");
-    revalidatePath("/admin");
-  } catch (err) {
-    console.log(err);
-    return { error: "Something went wrong!" };
-  }
-};
-
-export const addUser = async (prevState,formData) => {
-  const { username, email, password, img } = Object.fromEntries(formData);
-
-  try {
-    connectToDb();
-    const newUser = new User({
-      username,
-      email,
-      password,
-      img,
-    });
-
-    await newUser.save();
-    console.log("saved to db");
-    revalidatePath("/admin");
-  } catch (err) {
-    console.log(err);
-    return { error: "Something went wrong!" };
-  }
-};
-
-export const deleteUser = async (formData) => {
-  const { id } = Object.fromEntries(formData);
-
-  try {
-    connectToDb();
-
-    await Post.deleteMany({ userId: id });
-    await User.findByIdAndDelete(id);
-    console.log("deleted from db");
-    revalidatePath("/admin");
-  } catch (err) {
-    console.log(err);
-    return { error: "Something went wrong!" };
-  }
-};
-
-export const handleGithubLogin = async () => {
-  "use server";
-  await signIn("github");
-};
-
-export const handleLogout = async () => {
-  "use server";
-  await signOut();
-};
-
-export const register = async (previousState, formData) => {
-  const { username, email, password, img, passwordRepeat } =
-    Object.fromEntries(formData);
-
-  if (password !== passwordRepeat) {
-    return { error: "Passwords do not match" };
+      revalidatePatch("/cursos");
+      revalidatePath("/admin");
+    } catch (error) {
+      console.log(error);
+      return { error: "Error adding curso" };
+    }
   }
 
-  try {
-    connectToDb();
+  export const deleteCurso = async (formData) => {
+    const { id } = Object.fromEntries(formData);
 
-    const user = await User.findOne({ username });
+    try {
+      await prisma.curso.delete({
+        where: { id: id },
+      });
+    } catch (err) {
+      console.log(err);
+      return { error: "Something went wrong!" };
+    }
+  };
 
-    if (user) {
-      return { error: "Username already exists" };
+  export const addPost = async (prevState, formData) => {
+    const { title, desc, slug, userId } = Object.fromEntries(formData);
+
+    try {
+      connectToDb();
+      const newPost = new Post({
+        title,
+        desc,
+        slug,
+        userId,
+      });
+
+      await newPost.save();
+      console.log("saved to db");
+      revalidatePath("/blog");
+      revalidatePath("/admin");
+    } catch (err) {
+      console.log(err);
+      return { error: "Something went wrong!" };
+    }
+  };
+
+  export const deletePost = async (formData) => {
+    const { id } = Object.fromEntries(formData);
+
+    try {
+      connectToDb();
+
+      await Post.findByIdAndDelete(id);
+      console.log("deleted from db");
+      revalidatePath("/blog");
+      revalidatePath("/admin");
+    } catch (err) {
+      console.log(err);
+      return { error: "Something went wrong!" };
+    }
+  };
+
+  export const addUser = async (prevState, formData) => {
+    const { username, email, password, img } = Object.fromEntries(formData);
+
+    try {
+      connectToDb();
+      const newUser = new User({
+        username,
+        email,
+        password,
+        img,
+      });
+
+      await newUser.save();
+      console.log("saved to db");
+      revalidatePath("/admin");
+    } catch (err) {
+      console.log(err);
+      return { error: "Something went wrong!" };
+    }
+  };
+
+  export const deleteUser = async (formData) => {
+    const { id } = Object.fromEntries(formData);
+
+    try {
+      connectToDb();
+
+      await Post.deleteMany({ userId: id });
+      await User.findByIdAndDelete(id);
+      console.log("deleted from db");
+      revalidatePath("/admin");
+    } catch (err) {
+      console.log(err);
+      return { error: "Something went wrong!" };
+    }
+  };
+
+  export const handleGithubLogin = async () => {
+    "use server";
+    await signIn("github");
+  };
+
+  export const handleLogout = async () => {
+    "use server";
+    await signOut();
+  };
+
+  export const register = async (previousState, formData) => {
+    const { username, email, password, img, passwordRepeat } =
+      Object.fromEntries(formData);
+
+    if (password !== passwordRepeat) {
+      return { error: "Passwords do not match" };
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    try {
+      connectToDb();
 
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-      img,
-    });
+      const user = await User.findOne({ username });
 
-    await newUser.save();
-    console.log("saved to db");
+      if (user) {
+        return { error: "Username already exists" };
+      }
 
-    return { success: true };
-  } catch (err) {
-    console.log(err);
-    return { error: "Something went wrong!" };
-  }
-};
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
-export const login = async (prevState, formData) => {
-  const { username, password } = Object.fromEntries(formData);
+      const newUser = new User({
+        username,
+        email,
+        password: hashedPassword,
+        img,
+      });
 
-  try {
-    await signIn("credentials", { username, password });
-  } catch (err) {
-    console.log(err);
+      await newUser.save();
+      console.log("saved to db");
 
-    if (err.message.includes("CredentialsSignin")) {
-      return { error: "Invalid username or password" };
+      return { success: true };
+    } catch (err) {
+      console.log(err);
+      return { error: "Something went wrong!" };
     }
-    throw err;
-  }
-};
+  };
+
+  export const login = async (prevState, formData) => {
+    const { username, password } = Object.fromEntries(formData);
+
+    try {
+      await signIn("credentials", { username, password });
+    } catch (err) {
+      console.log(err);
+
+      if (err.message.includes("CredentialsSignin")) {
+        return { error: "Invalid username or password" };
+      }
+      throw err;
+    }
+  };

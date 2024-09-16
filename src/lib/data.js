@@ -1,37 +1,21 @@
+import { PrismaClient } from "@prisma/client";
 import { Post, User } from "./models";
 import { connectToDb } from "./utils"
 import {unstable_noStore as noStore} from "next/cache"
 
 
-/*
-// TEMPORARY DATA
-const users = [
-  { id: 1, name: "John" },
-  { id: 2, name: "Jane" },
-];
+const prisma = new PrismaClient();
 
-const posts = [
-  { id: 1, title: "Post 1", body: "Post 1......", userId: 1 },
-  { id: 2, title: "Post 2", body: "Post 2......", userId: 1 },
-  { id: 3, title: "Post 3", body: "Post 3......", userId: 2 },
-  { id: 4, title: "Post 4", body: "Post 4......", userId: 2 },
-];
-*/
-
-/*
-export const getPosts = async () => {
-  return posts;
+//Função para a tabela curso
+export const getCursos = async () => {
+  try {
+    const cursos = await prisma.curso.findMany();
+    return cursos;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error getting cursos");
+  }
 }
-
-export const getPost = async (id) => {
-  const post = posts.find((post) => post.id === parseInt(id));
-  return post;
-}
-
-export const getUsers = async (id) => {
-  return users.find((user) => user.id === parseInt(id));
-}
-*/
 
 export const getPosts = async () => {
   try {
